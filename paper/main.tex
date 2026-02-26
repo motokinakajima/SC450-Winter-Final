@@ -39,9 +39,11 @@ The beam search algorithm will yield a significantly higher total cross-talk com
 
 \subsection{Theoretical Plan}
 
-
+The theoretical analysis will consist of two parts: loop invariant proof that the beam search algorithm will aways find a solution that is at least as good as the greedy algorithm, and a tight bound on the time complexity of the beam search algorithm and the greedy algorithm. The loop invariant proof will be based on the trait of the beam search algorithm that it always explores a wider range of arrangements than the greedy algorithm, while also searching through the same arrangements as the greedy algorithm. The time complexity analysis will be based on the number of arrangements explored by each algorithm, which is determined by the number of students and the beam width. The greedy algorithm has a time complexity of $O(n^2)$, while the beam search algorithm has a time complexity of $O(B \cdot n^2)$, where $B$ is the beam width. 
 
 \subsection{Experimental Plan}
+
+The input will be a vector of $n$ normalized talkativeness values $v_i$, which all of them will be generated randomly through \texttt{std::random_device} in C++. The single array of input will automatically determine the size of the harkness table and the students' talkativeness, and thus completely determine all the parameters of the problem. The test will be conducted for various sizes of $n$ from 5 to 500, with increments of 5, and for various beam widths $B$ from 1 to 10, with increments of 1. 50 trials will be conducted for each combination of $n$ and $B$, and the average total cross-talk will be recorded for both the greedy algorithm and the beam search algorithm. 
 
 \bibliographystyle{plain}
 \bibliography{references}
