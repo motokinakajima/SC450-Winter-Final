@@ -1,0 +1,49 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{url}
+
+\title{Title of the Paper}
+\author{Motoki Nakajima \\ St. Paul's School \\ \texttt{motoki.nakajima@sps.edu}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Proposal}
+
+\subsection{Topic Area}
+
+I select 7. A well-defined algorithmic modification.
+
+\subsection{Formal Research Question}
+
+In a circular harkness table discussion, how effective is the beam search algorithm, compared to a simple greedy algorithm, in determining the table arrangement that maximizes cross-talks between students?
+
+\subsection{Formal Problem Definition}
+
+The problem models a circular harkness table discussion geometrically, where the cross-talk between students is modeled as $v_iv_j\cos(\theta_{ij})$, where $\theta_{ij}$ is the angle between the vector $\overrightarrow{v_i v_j}$ and $\overrightarrow{O v_i}$, where $O$ is the center of the circular table. There are $n$ students in the discussion, where each student is given an index of normalized talkativeness $v_i$ ($0 \leq v_i \leq 1$). The goal is to find the arrangement of students around the table that maximizes the total cross-talk, which can be expressed as $\sum_{i\neq j} v_iv_j\cos(\theta_{ij})$.
+
+\subsection{Hypothesis}
+
+The beam search algorithm will yield a significantly higher total cross-talk compared to the greedy algorithm, because the greedy algorithm tend to get stuck in an inefficient local maximum, while the beam search explores wider and tend to find a better local maximum. Although the beam search cost more time, considering the small number of students in a typical harkness table discussion, the importance of maximizing the cross-talk performance outweighs the cost of time.
+
+\subsection{Theoretical Plan}
+
+
+
+\subsection{Experimental Plan}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
