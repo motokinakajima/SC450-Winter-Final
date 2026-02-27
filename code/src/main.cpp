@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 
 int main() {
     const int N_MIN = 5;
@@ -26,14 +27,14 @@ int main() {
 
         for (int trial = 0; trial < TRIALS; ++trial) {
             unsigned seed = static_cast<unsigned>(n * 10000 + trial);
-            Problem problem(n, seed, 2.0);
+            Problem problem(n, seed, 11.0/7.0);  // real Harkness table: 11ft x 7ft
 
             double greedy_score = GreedySolver(problem).solve().current_score;
 
             for (int B = 1; B <= B_MAX; ++B) {
                 double beam_score = BeamSearchSolver(problem, B).solve().current_score;
                 out << n << "," << B << "," << trial << ","
-                    << greedy_score << "," << beam_score << "\n";
+                    << std::setprecision(15) << greedy_score << "," << beam_score << "\n";
             }
         }
     }

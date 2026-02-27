@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 Arrangement BeamSearchSolver::solve() const {
     std::vector<Arrangement> beam = {Arrangement(problem.n)};
@@ -26,6 +27,7 @@ Arrangement BeamSearchSolver::solve() const {
             }
         }
 
+        // Deterministic tiebreaking: score desc, then beam_idx asc, student asc, seat asc
         std::stable_sort(scored.begin(), scored.end(), [](const Candidate& a, const Candidate& b) {
             if (a.score != b.score) return a.score > b.score;
             if (a.beam_idx != b.beam_idx) return a.beam_idx < b.beam_idx;
@@ -33,16 +35,50 @@ Arrangement BeamSearchSolver::solve() const {
             return a.seat < b.seat;
         });
 
-        int keep = std::min((int)scored.size(), beam_width);
+        // --- Diverse beam: max 2 children per parent, greedy path always at index 0 ---
+        const int max_per_parent = 2;
+        std::unordered_map<int, int> parent_count;
+        std::vector<Candidate> selected;
+        selected.reserve(beam_width);
+
+        // Find greedy continuation: best move from beam[0] (the greedy path)
+        int greedy_cand_idx = -1;
+        for (int i = 0; i < (int)scored.size(); ++i) {
+            if (scored[i].beam_idx == 0) {
+                greedy_cand_idx = i;
+                break;  // sorted by score desc, so first match is best from beam[0]
+            }
+        }
+
+        // Slot 0 is always the greedy path continuation
+        if (greedy_cand_idx >= 0) {
+            selected.push_back(scored[greedy_cand_idx]);
+            parent_count[0] = 1;
+        }
+
+        // Fill remaining slots with diversity constraint
+        for (int i = 0; i < (int)scored.size() && (int)selected.size() < beam_width; ++i) {
+            if (i == greedy_cand_idx) continue;  // already added
+            if (parent_count[scored[i].beam_idx] < max_per_parent) {
+                selected.push_back(scored[i]);
+                parent_count[scored[i].beam_idx]++;
+            }
+        }
+
         std::vector<Arrangement> new_beam;
-        new_beam.reserve(keep);
-        for (int i = 0; i < keep; ++i) {
-            Arrangement next = beam[scored[i].beam_idx];
-            next.place(scored[i].student_idx, scored[i].seat, problem);
+        new_beam.reserve(selected.size());
+        for (auto& c : selected) {
+            Arrangement next = beam[c.beam_idx];
+            next.place(c.student_idx, c.seat, problem);
             new_beam.push_back(std::move(next));
         }
         beam = std::move(new_beam);
     }
 
-    return beam.front();
+    // Return the best arrangement in the beam (not necessarily beam[0])
+    auto best = std::max_element(beam.begin(), beam.end(),
+        [](const Arrangement& a, const Arrangement& b) {
+            return a.current_score < b.current_score;
+        });
+    return *best;
 }

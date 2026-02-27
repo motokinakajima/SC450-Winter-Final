@@ -28,7 +28,10 @@ Problem::Problem(int n, unsigned seed, double aspect_ratio)
             cos_angle = std::max(-1.0, std::min(1.0, cos_angle));
             double angle = std::acos(cos_angle);
             double s = std::abs(std::sin(angle));
-            cross_talk_cos[i][j] = std::pow(s, 128);  // |sin|^p
+            // 距離減衰: 1/d
+            double dx = px[j] - px[i], dy = py[j] - py[i];
+            double dist = std::sqrt(dx*dx + dy*dy);
+            cross_talk_cos[i][j] = std::pow(s, 16) / dist;
         }
     }
 
