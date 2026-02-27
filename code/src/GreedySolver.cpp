@@ -1,36 +1,24 @@
 #include "GreedySolver.h"
 
-#include <vector>
-#include <algorithm>
-#include <numeric>
-
 Arrangement GreedySolver::solve() const {
-    std::vector<int> students(problem.n);
-    std::iota(students.begin(), students.end(), 0);
-    std::sort(students.begin(), students.end(), [&](int a, int b) {
-        return problem.talkativeness[a] > problem.talkativeness[b];
-    });
-
     Arrangement arrangement(problem.n);
-    arrangement.place(students[0], 0, problem);
 
-    for (int k = 1; k < problem.n; ++k) {
-        int student = students[k];
-        double v_k = problem.talkativeness[student];
-
-        int best_seat = -1;
+    for (int step = 0; step < problem.n; ++step) {
+        int best_student = -1, best_seat = -1;
         double best_gain = -1.0;
-        for (int s = 0; s < problem.n; ++s) {
-            if (!arrangement.seat_taken[s]) {
-                double gain = v_k * arrangement.seat_potential[s];
-                if (gain > best_gain) {
-                    best_gain = gain;
+        for (int k = 0; k < problem.n; ++k) {
+            if (arrangement.student_placed[k]) continue;
+            for (int s = 0; s < problem.n; ++s) {
+                if (arrangement.seat_taken[s]) continue;
+                double g = arrangement.gain(k, s);
+                if (g > best_gain) {
+                    best_gain = g;
+                    best_student = k;
                     best_seat = s;
                 }
             }
         }
-
-        arrangement.place(student, best_seat, problem);
+        arrangement.place(best_student, best_seat, problem);
     }
 
     return arrangement;
