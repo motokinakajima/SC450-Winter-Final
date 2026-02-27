@@ -9,14 +9,14 @@
 
 int main() {
     const int N_MIN = 5;
-    const int N_MAX = 50;
+    const int N_MAX = 60;
     const int N_STEP = 5;
-    const int B_MAX = 10;
-    const int TRIALS = 20;
+    const int B_MAX = 20;
+    const int TRIALS = 50;
 
-    std::ofstream out("results.csv");
+    std::ofstream out("../results/results.csv");
     if (!out) {
-        std::cerr << "Failed to open results.csv" << std::endl;
+        std::cerr << "Failed to open ../results/results.csv" << std::endl;
         return 1;
     }
 

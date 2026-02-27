@@ -33,7 +33,7 @@ Problem::Problem(int n, unsigned seed, double aspect_ratio)
             // sin^16 + 0.3*cos^8 - λ*cos^64(θ/2)
             cross_talk_cos[i][j] = std::pow(s, 16)
                                  + 0.3 * std::pow(c, 8)
-                                 - 4.5 * std::pow(half_cos, 64);
+                                 - 4.0 * std::pow(half_cos, 64);
         }
     }
 
