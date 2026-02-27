@@ -26,7 +26,7 @@ int main() {
 
         for (int trial = 0; trial < TRIALS; ++trial) {
             unsigned seed = static_cast<unsigned>(n * 10000 + trial);
-            Problem problem(n, seed, 2.0);
+            Problem problem(n, seed);
 
             double greedy_score = GreedySolver(problem).solve().current_score;
 
