@@ -19,7 +19,7 @@
 
 \maketitle
 
-\section{Proposal}
+\section{Day 1}
 
 \subsection{Topic Area}
 
@@ -44,6 +44,34 @@ The theoretical analysis will consist of two parts: loop invariant proof that th
 \subsection{Experimental Plan}
 
 The input will be a vector of $n$ normalized talkativeness values $v_i$, which all of them will be generated randomly through \texttt{std::random\_device} in C++. The single array of input will automatically determine the size of the harkness table and the students' talkativeness, and thus completely determine all the parameters of the problem. The test will be conducted for various sizes of $n$ from 5 to 100, with increments of 5, and for various beam widths $B$ from 1 to 10, with increments of 1. 20 trials will be conducted for each combination of $n$ and $B$, and the average total cross-talk will be recorded for both the greedy algorithm and the beam search algorithm. The total cross-talk index will then be plotted by \texttt{matplotlib} in Python in three different ways: a 3d plot of total cross-talk against $n$ and $B$, a 2d plot of total cross-talk against $n$ for a fixed $B$ where the difference between the two algorithms are at largest, and a 2d plot of total cross-talk against $n$ for a fixed $B$ where the difference is smallest. The results will be analyzed to determine the effectiveness of the beam search algorithm compared to the greedy algorithm in maximizing the total cross-talk in a circular harkness table discussion.
+
+\section{Day 2/3}
+
+\subsection{Problem definition}
+
+The problem models an elliptical harkness table discussion geometrically.
+The score of each student's contribution to the table is defined by the student's affinity level with the other students, while considering a geometric cross-talk coefficient that depends on the angle between the students.
+\[
+S_i = a_{ij} \cdot k_{ij} \quad (\text{for all } j \neq i)
+\]
+\[
+k_{ij} = d_{ij}\cdot \left( \sin^{16}(\theta_{ij}) + 0.3\cos^8(\theta_{ij}) - 4.0\cos^{64}(\tfrac{\theta_{ij}}{2})\right)
+\]
+$S_i$ is the score of student $i$, $a_{ij}$ is the affinity level between student $i$ and student $j$, $k_{ij}$ is the cross-talk coefficient between student $i$ and student $j$, $\theta_{ij}$ is the central angle between student $i$ and student $j$, and $d_{ij}$ is the distance between student $i$ and student $j$.
+The total score of the table arrangement is defined as the sum of all scores amond the students.
+\[
+S = \sum_{i=1}^{n} S_i
+\]
+
+\subsection{Pseudocode}
+
+\subsection{Theoretical reasoning}
+
+\subsection{Complexity derivation}
+
+\subsection{Experimental plan}
+
+\subsection{Preliminary results}
 
 \bibliographystyle{plain}
 \bibliography{references}
