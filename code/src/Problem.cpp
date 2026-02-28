@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include "Problem.h"
 
 #include <vector>
@@ -9,18 +10,17 @@ Problem::Problem(int n, unsigned seed, double aspect_ratio)
 
     double a = aspect_ratio, b = 1.0;
 
-    // 楕円上の座標
     std::vector<double> px(n), py(n);
     for (int i = 0; i < n; ++i) {
         px[i] = a * std::cos(2.0 * M_PI * i / n);
         py[i] = b * std::sin(2.0 * M_PI * i / n);
     }
 
-    cross_talk_cos.assign(n, std::vector<double>(n, 0.0));
+    cross_talk_coeff.assign(n, std::vector<double>(n, 0.0));
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             if (i == j) continue;
-            // OP_i と OP_j のなす角
+            // center angle
             double dot = px[i]*px[j] + py[i]*py[j];
             double len_i = std::sqrt(px[i]*px[i] + py[i]*py[i]);
             double len_j = std::sqrt(px[j]*px[j] + py[j]*py[j]);
@@ -31,7 +31,7 @@ Problem::Problem(int n, unsigned seed, double aspect_ratio)
             double c = std::abs(std::cos(angle));
             double half_cos = std::cos(angle / 2.0);
             // sin^16 + 0.3*cos^8 - λ*cos^64(θ/2)
-            cross_talk_cos[i][j] = std::pow(s, 16)
+            cross_talk_coeff[i][j] = std::pow(s, 16)
                                  + 0.3 * std::pow(c, 8)
                                  - 4.0 * std::pow(half_cos, 64);
         }
@@ -46,5 +46,5 @@ Problem::Problem(int n, unsigned seed, double aspect_ratio)
 }
 
 double get_cross_talk(const Problem& problem, int i, int j) {
-    return problem.cross_talk_cos[i][j];
+    return problem.cross_talk_coeff[i][j];
 }
