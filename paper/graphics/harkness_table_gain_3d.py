@@ -54,8 +54,8 @@ plt.tight_layout()
 
 # --- 保存 ---
 # 論文には、このPDFを読み込むのが一番軽くて綺麗です
-plt.savefig('my_3d_plot.pdf', bbox_inches='tight', transparent=True)
+plt.savefig('cross_talk_coefficient.pdf', bbox_inches='tight', transparent=True)
 # 直接LaTeXコードとして埋め込みたい場合はこちら（コンパイルが少し遅くなります）
-plt.savefig('my_3d_plot.pgf', bbox_inches='tight')
+plt.savefig('cross_talk_coefficient.pgf', bbox_inches='tight')
 
 print("グラフの保存が完了しました。")

@@ -5,6 +5,8 @@
 \usepackage{hyperref}
 \usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
+\usepackage{tikz}
+\let\mathdefault\relax
 \usepackage{geometry}
 \geometry{margin=1in}
 \usepackage{enumitem}
@@ -62,16 +64,231 @@ The total score of the table arrangement is defined as the sum of all scores amo
 \[
 S = \sum_{i=1}^{n} S_i
 \]
+The geometrically determined cross-talk coefficient $k_{ij}$ is modeled based on feedbacks from Humanities teachers at St. Paul's School, and it is designed to capture the complex relationship between the angle of seating and the level of cross-talk.
 
+\begin{figure}[H]
+    \centering
+    \input{./graphics/cross_talk_coefficient.pgf}
+    \caption{Cross-talk coefficient $\tfrac{k_{ij}}{d_{ij}}$ around the table.}
+    \label{fig:cross_talk}
+\end{figure}
+
+The goal of the problem is to find the arrangement of students around the elliptical table that maximizes the total score $S$.
 \subsection{Pseudocode}
+
+\begin{algorithm}[H]
+\caption{Arrangement constructor, gain, and place}
+\begin{algorithmic}[1]
+\Function{InitArrangement}{$n$}
+    \State $order \gets [-1,\ldots,-1]$ (size $n$)
+    \State $seat\_taken \gets [\textbf{false},\ldots,\textbf{false}]$
+    \State $student\_placed \gets [\textbf{false},\ldots,\textbf{false}]$
+    \State $partial\_gain \gets n \times n$ matrix of $0.0$
+    \State $current\_score \gets 0.0$
+\EndFunction
+
+\Function{Gain}{$student\_idx, seat$}
+    \State \Return $2.0 \cdot partial\_gain[student\_idx][seat]$
+\EndFunction
+
+\Function{Place}{$student\_idx, seat, problem$}
+    \State $current\_score \gets current\_score + \Call{Gain}{student\_idx, seat}$
+    \State $order[seat] \gets student\_idx$
+    \State $seat\_taken[seat] \gets \textbf{true}$
+    \State $student\_placed[student\_idx] \gets \textbf{true}$
+    \For{$m \gets 0$ to $n-1$}
+        \If{$student\_placed[m]$} \State \textbf{continue} \EndIf
+        \For{$s \gets 0$ to $n-1$}
+            \If{$seat\_taken[s]$} \State \textbf{continue} \EndIf
+            \State $partial\_gain[m][s] \gets partial\_gain[m][s] + affinity[m][student\_idx] \cdot$
+            \Statex \hspace{1.5em}$\Call{GetCrossTalk}{problem, s, seat}$
+        \EndFor
+    \EndFor
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{Problem initialization and cross-talk lookup}
+\begin{algorithmic}[1]
+\Function{InitProblem}{$n, seed, aspect\_ratio$}
+    \State $a \gets aspect\_ratio,\; b \gets 1.0$
+    \For{$i \gets 0$ to $n-1$}
+        \State $px[i] \gets a\cos(2\pi i/n)$
+        \State $py[i] \gets b\sin(2\pi i/n)$
+    \EndFor
+    \State Initialize $cross\_talk\_coeff$ as $n\times n$ zeros
+    \For{$i \gets 0$ to $n-1$}
+        \For{$j \gets 0$ to $n-1$}
+            \If{$i=j$} \State \textbf{continue} \EndIf
+            \State $dot \gets px[i]px[j] + py[i]py[j]$
+            \State $len_i \gets \sqrt{px[i]^2 + py[i]^2},\; len_j \gets \sqrt{px[j]^2 + py[j]^2}$
+            \State $c_\theta \gets \Call{Clamp}{dot/(len_i len_j), -1, 1}$
+            \State $\theta \gets \arccos(c_\theta)$
+            \State $s \gets |\sin(\theta)|,\; c \gets |\cos(\theta)|,\; h \gets \cos(\theta/2)$
+            \State $cross\_talk\_coeff[i][j] \gets s^{16} + 0.3c^8 - 4.0h^{64}$
+        \EndFor
+    \EndFor
+    \State Initialize symmetric $affinity$ matrix using RNG seeded by $seed$
+\EndFunction
+
+\Function{GetCrossTalk}{$problem, i, j$}
+    \State \Return $problem.cross\_talk\_coeff[i][j]$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{GreedySolver::solve()}
+\begin{algorithmic}[1]
+\Function{GreedySolve}{$problem$}
+    \State $arrangement \gets \Call{InitArrangement}{problem.n}$
+    \For{$step \gets 0$ to $problem.n-1$}
+        \State $best\_student, best\_seat \gets -1, -1$
+        \State $best\_gain \gets -10^{18}$
+        \For{$k \gets 0$ to $problem.n-1$}
+            \If{$arrangement.student\_placed[k]$} \State \textbf{continue} \EndIf
+            \For{$s \gets 0$ to $problem.n-1$}
+                \If{$arrangement.seat\_taken[s]$} \State \textbf{continue} \EndIf
+                \State $g \gets \Call{Gain}{k,s}$
+                \State $cur \gets arrangement.current\_score + g$
+                \State $best \gets arrangement.current\_score + best\_gain$
+                \If{$cur > best$ \textbf{or} ($cur = best$ and tie-break on smaller $k$, then smaller $s$)}
+                    \State $best\_gain \gets g$
+                    \State $best\_student \gets k$
+                    \State $best\_seat \gets s$
+                \EndIf
+            \EndFor
+        \EndFor
+        \State \Call{Place}{$best\_student, best\_seat, problem$}
+    \EndFor
+    \State \Return $arrangement$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{BeamSearchSolver::solve()}
+\begin{algorithmic}[1]
+\Function{BeamSearchSolve}{$problem, beam\_width$}
+    \State $beam \gets [\Call{InitArrangement}{problem.n}]$
+    \For{$step \gets 0$ to $problem.n-1$}
+        \State $scored \gets [\ ]$
+        \For{each parent index $bi$ in $beam$}
+            \For{each unplaced student $k$}
+                \For{each empty seat $s$}
+                    \State $score \gets beam[bi].current\_score + beam[bi].gain(k,s)$
+                    \State append $(score, bi, k, s)$ to $scored$
+                \EndFor
+            \EndFor
+        \EndFor
+        \State Stable-sort $scored$ by: descending score, then ascending $(bi,k,s)$
+
+        \State $max\_per\_parent \gets 2$
+        \State $parent\_count \gets$ empty map, $selected \gets [\ ]$
+        \State $greedy\_cand\_idx \gets$ first index in $scored$ with $bi=0$ (or none)
+        \If{$greedy\_cand\_idx$ exists}
+            \State add $scored[greedy\_cand\_idx]$ to $selected$
+            \State $parent\_count[0] \gets 1$
+        \EndIf
+
+        \For{$i \gets 0$ to $|scored|-1$ while $|selected| < beam\_width$}
+            \If{$i = greedy\_cand\_idx$} \State \textbf{continue} \EndIf
+            \If{$parent\_count[scored[i].bi] < max\_per\_parent$}
+                \State add $scored[i]$ to $selected$
+                \State increment $parent\_count[scored[i].bi]$
+            \EndIf
+        \EndFor
+
+        \State $new\_beam \gets [\ ]$
+        \For{each candidate $c$ in $selected$}
+            \State $next \gets$ copy of $beam[c.bi]$
+            \State \Call{Place}{$c.student\_idx, c.seat, problem$} on $next$
+            \State append $next$ to $new\_beam$
+        \EndFor
+        \State $beam \gets new\_beam$
+    \EndFor
+    \State \Return arrangement in $beam$ with maximum $current\_score$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+\caption{main() experiment sweep in \texttt{src/main.cpp}}
+\begin{algorithmic}[1]
+\Function{Main}{}
+    \State Set constants: $N\_MIN{=}5$, $N\_MAX{=}60$, $N\_STEP{=}5$, $B\_MAX{=}20$, $TRIALS{=}50$
+    \State Open CSV output file and write header
+    \For{$n \gets N\_MIN$ to $N\_MAX$ step $N\_STEP$}
+        \For{$trial \gets 0$ to $TRIALS-1$}
+            \State $seed \gets n\cdot 10000 + trial$
+            \State $problem \gets \Call{InitProblem}{n, seed, 11/7}$
+            \State $greedy\_score \gets \Call{GreedySolve}{problem}.current\_score$
+            \For{$B \gets 1$ to $B\_MAX$}
+                \State $beam\_score \gets \Call{BeamSearchSolve}{problem, B}.current\_score$
+                \State Write $(n,B,trial,greedy\_score,beam\_score)$ to CSV
+            \EndFor
+        \EndFor
+    \EndFor
+    \State Close file and return success
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Theoretical reasoning}
 
+The beam search algorithm is the core contribution in this project. The key implementation detail in \texttt{BeamSearchSolver::solve()} is that at every step, the algorithm forcibly includes the best candidate whose parent index is $bi=0$ (stored as \texttt{greedy\_cand\_idx}) before filling the rest of the beam. Since index $0$ is recursively the greedy-descendant state from the previous step, this preserves one full greedy trajectory throughout all steps.
+
+After step $t$, the beam contains the same partial arrangement that greedy would produce after $t$ placements.
+
+\textbf{Base case ($t=0$).} The beam is initialized with a single empty arrangement, which is identical to greedy's initial state.
+
+\textbf{Inductive step.} Assume the greedy partial arrangement is present at index $0$ before step $t+1$. The algorithm explicitly selects the highest-scoring child of parent $0$. Therefore, the greedy child is inserted into the next beam and remains at index $0$ in \texttt{new\_beam}. Therefore, the invariant holds for step $t+1$.
+
+At termination ($t=n$), one complete greedy arrangement exists in the final beam. The returned solution is the maximum-score arrangement in that beam, so
+\[
+S_{\text{beam}} \ge S_{\text{greedy}} \quad \text{for all } B \ge 1.
+\]
+Thus, beam search strictly generalizes greedy in this implementation, while potentially improving quality by exploring additional high-scoring branches.
+
 \subsection{Complexity derivation}
+
+At each step, candidate generation scans all $B$ current arrangements and all feasible $(student, seat)$ pairs, so it creates $O(Bn^2)$ candidates. Sorting takes $O(Bn^2 \log(Bn))$ time. Expanding up to $B$ arrangements into the next beam costs $O(Bn^2)$ per step.
+
+Each expansion performs a copy of an \texttt{Arrangement} (includes an $n\times n$ \texttt{partial\_gain} table) and one \texttt{place()} call, both bounded by $O(n^2)$. Hence expansion cost is $O(Bn^2)$ per step. Summing over all $n$ steps gives
+\[
+T_{\text{beam}}(n,B) = O\!\left(\sum_{r=1}^{n} Br^2 \log(Br^2)\right) + O(Bn^3)
+= O\!\left(Bn^3\log(Bn)\right).
+\]
+
+For greedy, each step scans all valid $(student,seat)$ pairs and then calls \texttt{place()}, both bounded by $O(n^2)$ in this implementation, so
+\[
+T_{\text{greedy}}(n) = O\!\left(\sum_{r=1}^{n} r^2\right) = O(n^3).
+\]
+
+Therefore, beam search adds an approximately linear factor in $B$ (plus sorting overhead) in exchange for higher solution quality and the guarantee $S_{\text{beam}} \ge S_{\text{greedy}}$.
 
 \subsection{Experimental plan}
 
+To isolate the effect of beam search, we evaluate $B\in\{1,2,\ldots,20\}$ over $n\in\{5,10,\ldots,60\}$ with $50$ trials per $n$. Each trial uses a deterministic seed $seed=n\cdot 10000+trial$, and both algorithms run on the same generated \texttt{Problem}. The CSV records $(n,B,trial,greedy\_score,beam\_score)$, enabling direct paired comparisons.
+
+Primary metrics are:
+\begin{itemize}[leftmargin=*]
+    \item absolute gain: $\Delta = S_{\text{beam}}-S_{\text{greedy}}$,
+    \item relative gain: $\Delta_{\%}=\frac{S_{\text{beam}}-S_{\text{greedy}}}{|S_{\text{greedy}}|}\times 100$,
+    \item marginal benefit curve as $B$ increases.
+\end{itemize}
+
+Because $B=1$ reproduces the greedy trajectory in this implementation, it serves as an internal correctness check for the beam framework.
+
 \subsection{Preliminary results}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.9\linewidth]{../code/plot/improvement_vs_B.pdf}
+    \caption{Preliminary results showing the average total score for greedy and beam search across different $n$ and $B$.}
+    \label{fig:preliminary}
+\end{figure}
 
 \bibliographystyle{plain}
 \bibliography{references}
