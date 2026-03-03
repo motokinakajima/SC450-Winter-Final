@@ -30,6 +30,10 @@ df = pd.read_csv(CSV)
 df["improve_pct"] = (df["beam_score"] - df["greedy_score"]) / df["greedy_score"].abs() * 100
 
 # ── colour / style setup ────────────────────────────
+matplotlib.rcParams.update({
+    "pgf.texsystem": "pdflatex",
+    "pgf.preamble": "\\usepackage{amsmath}",
+})
 plt.rcParams.update({
     "font.family": "serif",
     "font.size": 11,
@@ -38,6 +42,13 @@ plt.rcParams.update({
     "savefig.bbox": "tight",
     "savefig.dpi": 300,
 })
+
+def save(fig, name):
+    """Save as both PDF and PGF."""
+    fig.savefig(OUTDIR / f"{name}.pdf")
+    fig.savefig(OUTDIR / f"{name}.pgf")
+    plt.close(fig)
+    print(f"✓ {name}.pdf  +  {name}.pgf")
 
 n_vals = sorted(df["n"].unique())
 B_vals = sorted(df["B"].unique())
@@ -58,9 +69,7 @@ ax.set_title("Beam Search Improvement vs Beam Width")
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=0))
 ax.legend(fontsize=8, ncol=3, loc="upper left", framealpha=0.8)
 ax.set_xticks(B_vals)
-fig.savefig(OUTDIR / "improvement_vs_B.pdf")
-plt.close(fig)
-print("✓ improvement_vs_B.pdf")
+save(fig, "improvement_vs_B")
 
 # ════════════════════════════════════════════════════
 # Plot 2 — Improvement vs n  (one line per B)
@@ -76,9 +85,7 @@ ax.set_title("Beam Search Improvement vs Problem Size")
 ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=0))
 ax.legend(fontsize=8, ncol=2, loc="upper left", framealpha=0.8)
 ax.set_xticks(n_vals)
-fig.savefig(OUTDIR / "improvement_vs_n.pdf")
-plt.close(fig)
-print("✓ improvement_vs_n.pdf")
+save(fig, "improvement_vs_n")
 
 # ════════════════════════════════════════════════════
 # Plot 3 — Absolute score vs n  (greedy & beam B=10)
@@ -99,9 +106,7 @@ ax.set_ylabel("Total Cross-Talk Score")
 ax.set_title("Greedy vs Beam Search — Absolute Score")
 ax.legend(fontsize=10, framealpha=0.8)
 ax.set_xticks(n_vals)
-fig.savefig(OUTDIR / "score_vs_n.pdf")
-plt.close(fig)
-print("✓ score_vs_n.pdf")
+save(fig, "score_vs_n")
 
 # ════════════════════════════════════════════════════
 # Plot 4 — Heatmap  (n × B)
@@ -128,8 +133,6 @@ for yi in range(len(n_vals)):
 
 cbar = fig.colorbar(im, ax=ax, pad=0.02)
 cbar.ax.yaxis.set_major_formatter(mtick.PercentFormatter(decimals=0))
-fig.savefig(OUTDIR / "heatmap_improvement.pdf")
-plt.close(fig)
-print("✓ heatmap_improvement.pdf")
+save(fig, "heatmap_improvement")
 
 print("\nAll plots saved to", OUTDIR)
