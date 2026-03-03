@@ -24,7 +24,7 @@ double brute_force_optimal(const Problem& problem) {
         for (int s1 = 0; s1 < n; ++s1) {
             for (int s2 = s1 + 1; s2 < n; ++s2) {
                 int i = perm[s1], j = perm[s2];
-                double ct = problem.cross_talk_cos[s1][s2];
+                double ct = problem.cross_talk_coeff[s1][s2];
                 double a  = problem.affinity[i][j];
                 score += 2.0 * a * ct;  // symmetric pair
             }
