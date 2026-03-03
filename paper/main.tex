@@ -24,6 +24,12 @@
 
 \section{Abstract}
 
+Seating arrangements around a Harkness table can significantly influence the quality of discussions among students.
+This paper presents a mathematical model to quantify the quality of discussions based on student affinities and seating positions, and proposes algorithms to optimize the seating arrangement for maximum discussion quality.
+We compare a greedy algorithm and a beam search algorithm against a brute force approach to evaluate their effectiveness in finding optimal arrangements.
+Our results indicate that the beam search algorithm consistently outperforms the greedy algorithm, although it does not always reach the optimal solution provided by the brute force method, especially as the number of students increases.
+The findings suggest that while the beam search algorithm is a practical solution for real-world scenarios, there is still room for improvement in the search strategy or heuristics used to further enhance the quality of discussions around the Harkness table.
+
 \section{Introduction}
 
 Harkness table discussions, adopted by St. Paul's School's Humanities Department, aim to foster student engagement and critical thinking through collaborative dialogue.
@@ -38,7 +44,7 @@ Mrs. Buckles suggested three rules to help arrange students effectively:
 \begin{itemize}
     \item Rule 1: Two students with strong affinity should not sit next to each other.
     \item Rule 2: Two students with strong affinity could sit across the table but it is not ideal.
-    \item Rule 3: Two students with strong affinity should sit facing angledly across the table.
+    \item Rule 3: Two students with strong affinity should sit facing diagonally across the table.
 \end{itemize}
 
 \section{Formal Problem Definition}
@@ -51,11 +57,12 @@ S_i = a_{ij} \cdot k_{ij} \quad (\text{for all } j \neq i)
 k_{ij} = d_{ij}\cdot \left( \sin^{16}(\theta_{ij}) + 0.3\cos^8(\theta_{ij}) - 4.0\cos^{64}(\tfrac{\theta_{ij}}{2})\right)
 \]
 $S_i$ is the score of student $i$, $a_{ij}$ is the affinity level between student $i$ and student $j$, $k_{ij}$ is the cross-talk coefficient between student $i$ and student $j$, $\theta_{ij}$ is the central angle between student $i$ and student $j$, and $d_{ij}$ is the distance between student $i$ and student $j$.
-The total score of the table arrangement is defined as the sum of all scores amond the students.
+$a_{ij}$ is normalized to be between $0$ and $1$, where $0$ indicates no affinity and $1$ indicates strong affinity. $d_{ij}$ uses the Euclidean distance where the minor axis of the table is $1$ and the major axis is $\tfrac{11}{7} \approx 1.57$. The aspect ratio is based on the actual table used in St. Paul's School.
+The total score of the table arrangement is defined as the sum of all scores among the students.
 \[
 S = \sum_{i=1}^{n} S_i
 \]
-The geometrically determined cross-talk coefficient $k_{ij}$ is modeled based on feedbacks from Humanities teachers at St. Paul's School, and it is designed to capture the complex relationship between the angle of seating and the level of cross-talk.
+The geometrically determined cross-talk coefficient $k_{ij}$ is modeled based on feedback from Humanities teachers at St. Paul's School, and it is designed to capture the complex relationship between the angle of seating and the level of cross-talk.
 
 \begin{figure}[H]
     \centering
@@ -123,7 +130,7 @@ T_{\text{greedy}}(n) = O\!\left(\sum_{r=1}^{n} r^2\right) = O(n^3).
 
 Each step scans $O(B)$ arrangements, where each arrangement has to explore all valid $(student, seat)$, which creates $O(B n^2)$ candidates.
 
-The dominant factor of the time complexity resides in the sotring among the candidates.
+The dominant factor of the time complexity resides in the sorting among the candidates.
 
 \[
 T_{\text{beam}}(n) = O\!\left(\sum_{i=1}^{n} B \cdot r^2 \cdot \log(Br)\right) = O\left(B n^3 \log (Bn)\right).
@@ -138,11 +145,52 @@ T_{\text{brute}}(n) = O(n!).
 
 \section{Experimental Results}
 
+\subsection{Greedy Algorithm vs. BeamSearch Algorithm}
+
+For the greedy algorithm and the beam search algorithm, we observed improvements in the total score $S$ as the number of beams increased, with the beam search algorithm consistently outperforming the greedy algorithm.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{../code/plot/heatmap_improvement.pdf}
+    \caption{Improvement of the total score $S$ over the greedy algorithm for different beam widths.}
+    \label{fig:score_comparison}
+\end{figure}
+
+For each number of students $n$, we observed that the beam width had a significant impact on the total score $S$, with larger beam widths generally leading to better arrangements.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{0.7}{\input{../code/plot/improvement_vs_B.pgf}}
+    \caption{Total score $S$ for different beam widths $B$ across various numbers of students $n$.}
+    \label{fig:beam_width_comparison}
+\end{figure}
+
+\subsection{Search Algorithms vs. Brute Force Algorithm}
+
+For small numbers of students (up to $n=10$), we compared the total scores $S$ obtained from the greedy algorithm and the beam search algorithm with the optimal scores obtained from the brute force algorithm.
+We used $B=20$ for the beam search algorithm in this comparison.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{0.75}{\input{../code/plot/bf_scatter.pgf}}
+    \caption{Comparison of total scores $S$ from the greedy algorithm, beam search algorithm where $y=x$ represents the optimal score}
+    \label{fig:optimal_comparison}
+\end{figure}
+
+Even though the beam search algorithm plateaued at $B=20$ when $n=5$, which could be observed in Figure~\ref{fig:beam_width_comparison}, not all the beam search results reached the optimal score.
+
 \section{Discussion and Interpretation}
 
-\section{References}
+We observed that the beam search algorithm consistently outperformed the greedy algorithm, with larger beam widths leading to better arrangements and higher total scores $S$.
+However, the beam search algorithm did not always reach the optimal score obtained from the brute force algorithm, especially as the number of students increased, which suggests that there is still room for improvement in the search strategy or heuristics used in the beam search algorithm.
+The beam search algorithm's performance between different number of students $n$ showed small correlation when compared to the greedy algorithm, which suggests that the beam search algorithm is more effective in finding better arrangements regardless of the number of students.
+Considering the arrangement of students only happens once in a while, the search algorithms being transformative, and also that the student number remains relatively small, the beam search algorithm with a large beam width can be a practical solution for finding good arrangements in real-world scenarios.
 
-\section{AI Usage Appendix}
+\section{Aknowledgements}
+
+Mrs. Buckles, a Humanities teacher at St. Paul's School, provided insights and feedback that were instrumental in modeling the problem and designing the algorithms.
+
+Gemini, an AI language model developed by Google DeepMind, was used to assist in the development of the algorithms.
 
 \bibliographystyle{plain}
 \bibliography{references}
