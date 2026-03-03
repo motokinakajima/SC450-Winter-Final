@@ -12,6 +12,7 @@
 \usepackage{enumitem}
 \usepackage{booktabs}
 \usepackage{url}
+\usepackage{float}
 
 \title{Title of the Paper}
 \author{Motoki Nakajima \\ St. Paul's School \\ \texttt{motoki.nakajima@sps.edu}}
@@ -21,7 +22,127 @@
 
 \maketitle
 
+\section{Abstract}
 
+\section{Introduction}
+
+Harkness table discussions, adopted by St. Paul's School's Humanities Department, aim to foster student engagement and critical thinking through collaborative dialogue.
+Although the table geometry naturally encourages student interaction, case specific incompatibilities may arise due to varying student personalities and discussion dynamics.
+This paper focuses on the seating arrangement of a Harkness table to maximize the overall quality of discussions, which we quantify using an experience-based math model then solve with scientific computations.
+\section{Related Background}
+
+Mrs. Buckles, a Humanities teacher at St. Paul's School, has observed discussion dynamics and identified key factors influencing the quality of Harkness discussions.
+She pointed out that cross-talks between students directly affects the quality of discussions.
+Cross-talks often occur between students who already have established relationships, which can help engage others but can also lead to exclusion of the less connected.
+Mrs. Buckles suggested three rules to help arrange students effectively:
+\begin{itemize}
+    \item Rule 1: Two students with strong affinity should not sit next to each other.
+    \item Rule 2: Two students with strong affinity could sit across the table but it is not ideal.
+    \item Rule 3: Two students with strong affinity should sit facing angledly across the table.
+\end{itemize}
+
+\section{Formal Problem Definition}
+The problem models an elliptical harkness table discussion geometrically.
+The score of each $n$ student's contribution to the table is defined by the student's affinity level with the other students, while considering a geometric cross-talk coefficient that depends on the angle between the students.
+\[
+S_i = a_{ij} \cdot k_{ij} \quad (\text{for all } j \neq i)
+\]
+\[
+k_{ij} = d_{ij}\cdot \left( \sin^{16}(\theta_{ij}) + 0.3\cos^8(\theta_{ij}) - 4.0\cos^{64}(\tfrac{\theta_{ij}}{2})\right)
+\]
+$S_i$ is the score of student $i$, $a_{ij}$ is the affinity level between student $i$ and student $j$, $k_{ij}$ is the cross-talk coefficient between student $i$ and student $j$, $\theta_{ij}$ is the central angle between student $i$ and student $j$, and $d_{ij}$ is the distance between student $i$ and student $j$.
+The total score of the table arrangement is defined as the sum of all scores amond the students.
+\[
+S = \sum_{i=1}^{n} S_i
+\]
+The geometrically determined cross-talk coefficient $k_{ij}$ is modeled based on feedbacks from Humanities teachers at St. Paul's School, and it is designed to capture the complex relationship between the angle of seating and the level of cross-talk.
+
+\begin{figure}[H]
+    \centering
+    \scalebox{0.5}{\input{./graphics/cross_talk_coefficient.pgf}}
+    \caption{Cross-talk coefficient $\tfrac{k_{ij}}{d_{ij}}$ around the table.}
+    \label{fig:cross_talk}
+\end{figure}
+
+The goal of the problem is to find the arrangement of students around the elliptical table that maximizes the total score $S$.
+
+\section{Algorithm Description}
+
+\subsection{Greedy Algorithm}
+
+The greedy algorithm iteratively searches through the best possible seating for each student based on the expected gain in total score $S$.
+Starting from an empty table, the algorithm picks a random student who has not been seated yet and calculates the expected gain in total score $S$ for each possible seating position around the table.
+The student is then seated in the position that yields the highest expected gain in total score $S$.
+This process is repeated until all students are seated.
+
+\subsection{BeamSearch Algorithm}
+
+The BeamSearch algorithm heuristically explores the search space of possible seating arrangements by maintaining $B$ of best arrangements at each step, where $B$ is the beam width.
+Starting from an empty table, the algorithm generates all possible seating arrangements for the first student and evaluates their total scores $S$.
+The top $B$ arrangements are kept for the next iteration, where the next student is seated in all possible positions for each of the $B$ arrangements.
+The total scores $S$ of the new arrangements are evaluated, and the top $B$ arrangements are kept for the next iteration.
+This process continues until all students are seated, and the arrangement with the highest total score $S$ is returned as the solution.
+
+The algorithm implemented in this paper uses two additional heuristics to further optimize the search process:
+\begin{itemize}
+    \item Heuristic 1: For each step, the algorithm maintains the greedy option as one of the candidates, ensuring that the best local choice is always considered.
+    \item Heuristic 2: For each step, the algorithm limits the number of candidates branched from the same parent arrangement to $2$, which helps to diversify the search and avoid getting stuck in local optima.
+\end{itemize}
+
+\subsection{Brute Force Algorithm}
+
+The brute force algorithm exhaustively enumerates all possible seating arrangements of the students around the table and calculates the total score $S$ for each arrangement.
+This algorithm was only used to verify the correctness of the other algorithms for small numbers of students due to its factorial time complexity.
+
+\section{Correctness Argument}
+
+\subsection{Greedy Algorithm}
+
+The greedy algorithm does not guarantee an optimal solution because it makes locally optimal choices at each step without considering the global arrangement of students.
+
+\subsection{BeamSearch Algorithm}
+
+The BeamSearch does not guarantee an optimal solution because it limits the search space, which may lead to missing optimal arrangements.
+However, heuristics are implemented, which can help to find better arrangements than the greedy algorithm.
+Considering the BeamSearch algorithm always includes the greedy solution as a candidate, the outcome of this algorithm is guaranteed to be at least as good as the greedy algorithm.
+
+\subsection{Brute Force Algorithm}
+
+Because the brute force algorithm searches through all possible arrangements, the optimal arrangement is guaranteed.
+
+\section{Complexity Analysis}
+
+\subsection{Greedy Algorithm}
+
+Each step scans all valid $(student, seat)$, where each scan calls $O(1)$ to calculate the expected gain.
+\[
+T_{\text{greedy}}(n) = O\!\left(\sum_{r=1}^{n} r^2\right) = O(n^3).
+\]
+
+\subsection{BeamSearch Algorithm}
+
+Each step scans $O(B)$ arrangements, where each arrangement has to explore all valid $(student, seat)$, which creates $O(B n^2)$ candidates.
+
+The dominant factor of the time complexity resides in the sotring among the candidates.
+
+\[
+T_{\text{beam}}(n) = O\!\left(\sum_{i=1}^{n} B \cdot r^2 \cdot \log(Br)\right) = O\left(B n^3 \log (Bn)\right).
+\]
+
+\subsection{Brute Force Algorithm}
+
+The brute force algorithm explores all possible arrangements, which is $n!$.
+\[
+T_{\text{brute}}(n) = O(n!).
+\]
+
+\section{Experimental Results}
+
+\section{Discussion and Interpretation}
+
+\section{References}
+
+\section{AI Usage Appendix}
 
 \bibliographystyle{plain}
 \bibliography{references}
